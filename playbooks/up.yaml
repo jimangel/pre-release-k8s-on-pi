@@ -1,0 +1,14 @@
+---
+- hosts: 
+    - all
+  roles:
+    - ./roles/raspberry-pi-up
+    - ./roles/k8s-commons-up
+- hosts: 
+    - k8s_controlplane
+  roles:
+    - ./roles/k8s-controlplane-up
+- hosts:
+    - k8s_worker
+  roles:
+    - ./roles/k8s-worker-up

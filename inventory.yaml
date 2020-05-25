@@ -1,0 +1,40 @@
+---
+all:
+  hosts:
+    # Use only IP addresses here!
+    raspberrypi-case-0:
+      ansible_host: 192.168.7.147
+    raspberrypi-case-1:
+      ansible_host: 192.168.7.243
+    raspberrypi-case-2:
+      ansible_host: 192.168.7.198
+    raspberrypi-case-3:
+      ansible_host: 192.168.7.194
+  children:
+    k8s_controlplane:
+      hosts:
+      # At most one controlplane:
+        raspberrypi-case-3: {}
+    k8s_worker:
+      hosts:
+        raspberrypi-case-0: {}
+        raspberrypi-case-1: {}
+        raspberrypi-case-2: {}
+
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_connection: ssh
+    ansible_user: pi
+
+    # https://github.com/kubernetes/kubernetes/blob/master/build/dependencies.yaml
+    kubernetes_version: "v1.19.0-beta.0"
+    kubernetes_cni_version: "v0.8.5"
+    kubernetes_crictl_cri_version: "v1.17.0"
+    docker_version: "19.03.9"
+
+    # kubeadm config setup
+    cluster_name: ansible-pi
+    # the join token expires after 2 hours
+    join_token: z1km0i.ygllcb4ulis8ywgw
+
+    # where to save admin.conf

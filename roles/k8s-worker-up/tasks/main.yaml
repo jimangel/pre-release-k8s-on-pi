@@ -1,0 +1,60 @@
+---
+- name: download and extract kubernetes {{ kubernetes_version }} node tarball
+  unarchive:
+    src: "https://dl.k8s.io/{{ kubernetes_version }}/kubernetes-node-linux-arm.tar.gz"
+    remote_src: true
+    dest: /home/{{ ansible_user }}
+    # only extracts what is needed (bin folder)
+    extra_opts:
+    - --strip=2
+    - --wildcards
+    - '*/bin'
+    creates: /home/{{ ansible_user }}/bin
+  tags:
+  - worker
+- name: move kubeadm kubectl and kubelet binaries to /usr/bin
+  copy:
+    src: /home/{{ ansible_user }}/bin/{{ item }}
+    dest: /usr/bin/{{ item }}
+    remote_src: true
+    mode: a+x
+  with_items:
+     - kubeadm
+     - kubectl
+     - kubelet
+     - kube-proxy
+  tags:
+  - worker
+- name: enable and start service kubelet
+  service:
+    name: kubelet
+    daemon_reload: yes
+    enabled: yes
+  tags:
+  - worker
+- name: gather facts (ip address) from controlplane for kubeadm config file
+  setup:
+  delegate_to: "{{item}}"
+  delegate_facts: True
+  loop: "{{groups['k8s_controlplane']}}"
+  tags:
+  - kubeadm-conf
+  - worker
+- name: create kubeadm config file
+  template:
+    src: ../../files/kubeadm-config.j2
+    dest: /home/{{ ansible_user }}/kubeadm-config.yaml
+  tags:
+  - kubeadm-conf
+  - worker
+- name: Check if /etc/kubernetes/kubelet.conf exists
+  stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet_conf
+  tags:
+  - kubernetes-status
+- name: init kubeadm (bootstrap control plane)
+  shell: kubeadm join --config=/home/{{ ansible_user }}/kubeadm-config.yaml
+  when: not kubelet_conf.stat.exists
+  tags:
+  - kubernetes-status

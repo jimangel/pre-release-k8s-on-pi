@@ -1,0 +1,72 @@
+---
+- name: Check if docker {{ docker_version }} is installed
+  shell: "docker -v | grep {{ docker_version }} | wc -l"
+  register: docker_match
+  tags:
+  - docker
+- name: Installing docker {{ docker_version }}
+  shell: "curl -sSL get.docker.com | sh"
+  environment:
+    VERSION: "{{ docker_version }}"
+  args:
+    warn: no
+  when: docker_match.stdout != "1"
+  tags:
+  - docker
+- name: Add remote "pi" user to "docker" group
+  user:
+    name: "{{ ansible_user }}"
+    group: "docker"
+    append: yes
+  tags:
+  - docker
+- name: Install conntrack, socat, and ebtables
+  apt:
+    pkg:
+    - conntrack
+    - socat
+    - ebtables
+  tags:
+  - apt
+- name: download and extract cri-tools {{ kubernetes_crictl_cri_version }}
+  unarchive:
+    src: "https://github.com/kubernetes-sigs/cri-tools/releases/download/{{ kubernetes_crictl_cri_version }}/crictl-{{ kubernetes_crictl_cri_version }}-linux-arm.tar.gz"
+    remote_src: true
+    dest: /usr/local/bin
+    creates: /usr/local/bin/crictl
+  tags:
+  - cri
+- name: Create /opt/cni/bin/ directory for kubernetes cni
+  file:
+    path: /opt/cni/bin/
+    state: directory
+  tags:
+  - cni
+- name: download and extract kubernetes cni {{ kubernetes_cni_version }}
+  unarchive:
+    src: "https://github.com/containernetworking/plugins/releases/download/{{ kubernetes_cni_version }}/cni-plugins-linux-arm-{{ kubernetes_cni_version }}.tgz"
+    remote_src: true
+    dest: /opt/cni/bin
+    creates: /opt/cni/bin/bridge
+  tags:
+  - cni
+- name: Creates /etc/systemd/system/kubelet.service.d/ directory for kubeadm kubelet conf
+  file:
+    path: /etc/systemd/system/kubelet.service.d/
+    state: directory
+  tags:
+  - kubeadm
+- name: Copy kubeadm kubelet service conf
+  copy:
+    src: ../../files/10-kubeadm.conf
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+  tags:
+  - kubeadm
+  - kubelet
+- name: Copy kubelet service conf
+  copy:
+    src: ../../files/kubelet.service
+    dest: /etc/systemd/system/kubelet.service
+  tags:
+  - kubeadm
+  - kubelet

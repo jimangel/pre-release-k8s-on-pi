@@ -1,0 +1,30 @@
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: InitConfiguration
+bootstrapTokens:
+- token: {{ join_token }}
+  description: "kubeadm bootstrap token"
+  ttl: "2h"
+---
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+clusterName: {{ cluster_name }}
+kubernetesVersion: {{ kubernetes_version }}
+controllerManager:
+  extraArgs:
+    node-monitor-grace-period: "16s"
+    node-monitor-period: "2s"
+apiServer:
+  extraArgs:
+    advertise-address: {{ hostvars[groups['k8s_controlplane'][0]]['ansible_default_ipv4']['address'] }}
+    default-not-ready-toleration-seconds: "30"
+    default-unreachable-toleration-seconds: "30"
+---
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: JoinConfiguration
+discovery:
+  bootstrapToken:
+    apiServerEndpoint: {{ hostvars[groups['k8s_controlplane'][0]]['ansible_default_ipv4']['address'] }}:6443
+    token: {{ join_token }}
+    unsafeSkipCAVerification: true
+  timeout: 5m0s
+  tlsBootstrapToken: {{ join_token }}

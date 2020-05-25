@@ -1,0 +1,54 @@
+---
+- name: Check if swap enabled
+  shell: swapon -s | wc -l
+  register: swap_enabled
+  tags:
+  - swap
+- name: disable swap service
+  service:
+    name: dphys-swapfile
+    enabled: no
+  when: swap_enabled.stdout != "0"
+  tags:
+  - swap
+- name: Disable swap
+  shell: "{{ item }}"
+  with_items: 
+    - dphys-swapfile swapoff
+    - dphys-swapfile uninstall
+  when: swap_enabled.stdout != "0"
+  tags:
+  - swap
+- name: Ensure hostname set
+  hostname: name={{ inventory_hostname }}
+  tags:
+  - hostname
+- name: Ensure hostname is in /etc/hosts
+  lineinfile:
+    dest=/etc/hosts
+    regexp="^{{ ansible_default_ipv4.address }}.+$"
+    line="{{ ansible_default_ipv4.address }} {{ ansible_hostname }}"
+  tags:
+  - hostname
+- name: Ensure SSH password login is disabled
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#PasswordAuthentication yes'
+    line: PasswordAuthentication no
+  notify: restart ssh
+  tags:
+  - ssh
+- name: Check if cgroups are enabled
+  shell: grep cgroup /boot/cmdline.txt | wc -l
+  register: cgroups_enabled
+  tags:
+  - cgroups
+- name: enable cgroups
+  shell: "{{ item }}"
+  with_items: 
+    - cp /boot/cmdline.txt /boot/cmdline_backup.txt
+    - orig="$(head -n1 /boot/cmdline.txt) cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory" && echo $orig | tee /boot/cmdline.txt
+  when: cgroups_enabled.stdout == "0"
+  notify: reboot system
+  tags:
+  - cgroups

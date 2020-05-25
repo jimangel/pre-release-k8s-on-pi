@@ -1,0 +1,20 @@
+---
+- name: Copy admin.conf from control plane to local node.
+  hosts: k8s_controlplane[0]
+  become: true
+
+  tasks:
+    - name: get admin.conf from control plane node
+      fetch:
+        src: /etc/kubernetes/admin.conf
+        # save to working repo
+        dest: ../
+        flat: yes
+  
+    - debug:
+        msg:
+        - "Try running commands locally with:"
+        - "kubectl --kubeconfig=admin.conf get pods -A"
+        - "================== OR ===================="
+        - "export KUBECONFIG=$KUBECONFIG:admin.conf"
+        - "kubectl config use-context kubernetes-admin@ansible-pi"
