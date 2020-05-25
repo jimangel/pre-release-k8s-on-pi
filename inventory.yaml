@@ -14,12 +14,12 @@ all:
     k8s_controlplane:
       hosts:
       # At most one controlplane:
-        raspberrypi-case-3: {}
+        raspberrypi-case-0: {}
     k8s_worker:
       hosts:
-        raspberrypi-case-0: {}
         raspberrypi-case-1: {}
         raspberrypi-case-2: {}
+        raspberrypi-case-3: {}
 
   vars:
     ansible_python_interpreter: /usr/bin/python3
@@ -36,5 +36,3 @@ all:
     cluster_name: ansible-pi
     # the join token expires after 2 hours
     join_token: z1km0i.ygllcb4ulis8ywgw
-
-    # where to save admin.conf

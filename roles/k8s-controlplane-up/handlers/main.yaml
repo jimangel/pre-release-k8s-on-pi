@@ -1,3 +1,5 @@
 ---
 - name: kubectl apply cni
-  shell: kubectl --kubeconfig="/etc/kubernetes/admin.conf" apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+  shell: |
+    kubectl --kubeconfig="/etc/kubernetes/admin.conf" wait --namespace=kube-system --for=condition=Ready pods --selector tier=control-plane --timeout=600s
+    kubectl --kubeconfig="/etc/kubernetes/admin.conf" apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
