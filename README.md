@@ -6,7 +6,7 @@ I've been part of the Kubernetes release team since 1.12 and always wanted a min
 
 ![](img/pi.jpg)
 
-You can read the full setup / build on my [blog](jimangel.io/post/upstream-kubernetes-on-pi/).
+You can read the full setup / build on my [blog](https://jimangel.io/post/upstream-kubernetes-on-pi/).
 
 ### Install Ansible
 https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html
