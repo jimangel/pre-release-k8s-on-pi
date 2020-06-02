@@ -1,5 +1,11 @@
 ---
-- name: kubectl apply cni
+- name: wait for admin.conf
+  wait_for:
+    path: /etc/kubernetes/admin.conf
+  listen: "apply cni"
+- name: install weaveworks cni
   shell: |
-    kubectl --kubeconfig="/etc/kubernetes/admin.conf" wait --namespace=kube-system --for=condition=Ready pods --selector tier=control-plane --timeout=600s
-    kubectl --kubeconfig="/etc/kubernetes/admin.conf" apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+    export KUBECONFIG=/etc/kubernetes/admin.conf
+    kubectl wait --namespace=kube-system --for=condition=Ready pods --selector tier=control-plane --timeout=600s
+    kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+  listen: "apply cni"

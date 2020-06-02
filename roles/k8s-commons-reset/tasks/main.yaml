@@ -1,0 +1,51 @@
+---
+- name: disable and stop kubelet service
+  service:
+    name: kubelet
+    enabled: no
+    state: stopped
+  ignore_errors: yes
+  tags:
+  - controlplane
+- name: kubelet service files,  k8s binaries, kubeconfigs, cri tools, cni, kubeadm, kubelet, kube-proxy
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/systemd/system/kubelet.service
+    - /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    - /home/{{ ansible_user }}/bin
+    - /home/{{ ansible_user }}/.kube/config
+    - /usr/local/bin/crictl
+    - /opt/cni
+    - /usr/bin/kubeadm
+    - /usr/bin/kubectl
+    - /usr/bin/kubelet
+    - /usr/bin/kube-proxy
+    - /etc/kubernetes
+- name: uninstall conntrack, socat, and ebtables
+  apt:
+    pkg:
+    - conntrack
+    - socat
+    - ebtables
+    state: absent
+    purge: true
+  tags:
+  - apt
+- name: prune all docker components
+  shell: docker system prune --all --force --volumes
+  ignore_errors: yes
+  tags:
+  - docker
+- name: remove docker entirely
+  apt:
+    pkg:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    state: absent
+    purge: true
+  tags:
+  - never
+  - delete-docker

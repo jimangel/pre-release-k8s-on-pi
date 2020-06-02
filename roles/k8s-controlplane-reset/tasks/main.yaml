@@ -1,0 +1,12 @@
+---
+- name: reset kubeadm (removes k8s controlplane components)
+  shell: kubeadm reset --force --skip-phases remove-etcd-member
+  ignore_errors: yes
+  tags:
+  - kubeadm-only
+- name: delete etcd
+  file:
+    path: "/var/lib/etcd"
+    state: absent
+  tags:
+  - kubeadm-only

@@ -1,0 +1,6 @@
+---
+- name: reset kubeadm (removes k8s worker components)
+  shell: kubeadm reset --force
+  ignore_errors: yes
+  tags:
+  - kubeadm-only

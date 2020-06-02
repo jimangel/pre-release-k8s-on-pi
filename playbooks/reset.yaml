@@ -1,0 +1,13 @@
+---
+- hosts: 
+    - k8s_controlplane
+  roles:
+    - ./roles/k8s-controlplane-reset
+- hosts:
+    - k8s_worker
+  roles:
+    - ./roles/k8s-worker-reset
+- hosts: 
+    - all
+  roles:
+    - ./roles/k8s-commons-reset

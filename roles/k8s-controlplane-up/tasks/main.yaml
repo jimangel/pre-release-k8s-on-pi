@@ -59,7 +59,7 @@
 - name: init kubeadm (bootstrap control plane)
   shell: kubeadm init --config=/home/{{ ansible_user }}/kubeadm-config.yaml
   when: not admin_conf.stat.exists
-  notify: kubectl apply cni
+  notify: apply cni
   tags:
   - controlplane
 - name: Create $HOME/.kube for kubectl
